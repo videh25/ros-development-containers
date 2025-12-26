@@ -3,6 +3,8 @@ services:
     # Change this to whichever image you want to run
     image: ${IMAGE_NAME_AND_TAG}
     container_name: ${CONTAINER_NAME}
+    env_file:
+      - ./container_env.env
 
     # Enable graphical apps (RViz, Gazebo, etc.)
     environment:
