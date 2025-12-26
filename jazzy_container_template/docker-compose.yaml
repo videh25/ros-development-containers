@@ -1,7 +1,7 @@
 services:
   ros2_dev:
     # Change this to whichever image you want to run
-    image: jazzy-devlopment:0
+    image: ${IMAGE_NAME_AND_TAG}
     container_name: ${CONTAINER_NAME}
 
     # Enable graphical apps (RViz, Gazebo, etc.)
@@ -14,14 +14,14 @@ services:
 
     volumes:
       # Workspace source code
-      - ${HOME_PATH}/Documents/:/home/videh/Documents
-      - ${HOME_PATH}/Downloads/:/home/videh/Downloads
-      - ${HOME_PATH}/Pictures/:/home/videh/Pictures
-      - ${HOME_PATH}/Videos/:/home/videh/Videos
+      - ${HOST_HOME_PATH}/Documents/:/home/${USER}/Documents
+      - ${HOST_HOME_PATH}/Downloads/:/home/${USER}/Downloads
+      - ${HOST_HOME_PATH}/Pictures/:/home/${USER}/Pictures
+      - ${HOST_HOME_PATH}/Videos/:/home/${USER}/Videos
       # Share X11 socket for GUI tools
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      # Optional: share your bash ases or custom bashrc
-      - ~/.bash_aliases:/home/videh/.bash_aliases:ro
+      # Optional: share your bash aliasses or custom bashrc
+      - ../common/.bash_aliases:/home/${USER}/.bash_aliases:ro
 
     # Use host network for ROS2 discovery
     network_mode: host
@@ -31,8 +31,8 @@ services:
     stdin_open: true
 
     # Run as non-root (if your Dockerfile creates user 'dev')
-    user: videh
+    user: ${USER}
     hostname: ${CONTAINER_NAME}
 
     # Working directory inside container
-    working_dir: /home/videh
+    working_dir: /home/${USER}
