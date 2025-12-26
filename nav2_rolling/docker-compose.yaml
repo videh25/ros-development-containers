@@ -1,0 +1,40 @@
+services:
+  ros2_dev:
+    # Change this to whichever image you want to run
+    image: ${IMAGE_NAME_AND_TAG}
+    container_name: ${CONTAINER_NAME}
+    env_file:
+      - ./container_env.env
+
+    # Enable graphical apps (RViz, Gazebo, etc.)
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+      - DEBIAN_FRONTEND=noninteractive
+      - TERM=xterm-256color
+
+    volumes:
+      # Workspace source code
+      - ${HOST_HOME_PATH}/Documents/:/home/${USER}/Documents
+      - ${HOST_HOME_PATH}/Downloads/:/home/${USER}/Downloads
+      - ${HOST_HOME_PATH}/Pictures/:/home/${USER}/Pictures
+      - ${HOST_HOME_PATH}/Videos/:/home/${USER}/Videos
+      # Share X11 socket for GUI tools
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      # Optional: share your bash aliasses or custom bashrc
+      - ../common/.bash_aliases:/home/${USER}/.bash_aliases:ro
+
+    # Use host network for ROS2 discovery
+    network_mode: host
+
+    # Keep container running interactively
+    tty: true
+    stdin_open: true
+
+    # Run as non-root (if your Dockerfile creates user 'dev')
+    user: ${USER}
+    hostname: ${CONTAINER_NAME}
+
+    # Working directory inside container
+    working_dir: /home/${USER}
