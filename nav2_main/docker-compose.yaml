@@ -1,0 +1,71 @@
+services:
+  ros2_dev:
+    # Change this to whichever image you want to run
+    image: ${IMAGE_NAME_AND_TAG}
+    container_name: ${CONTAINER_NAME}
+    runtime: nvidia
+    env_file:
+      - ./container_env.env
+
+    # Enable graphical apps (RViz, Gazebo, etc.)
+    environment:
+      - DISPLAY=${DISPLAY}
+      - QT_X11_NO_MITSHM=1
+      - XAUTHORITY=/tmp/.docker.xauth
+      - DEBIAN_FRONTEND=noninteractive
+      - TERM=xterm-256color
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all  # This is crucial for GUI/OpenGL
+      - __NV_PRIME_RENDER_OFFLOAD=1     # Forces NVIDIA for GLX
+      - __GLX_VENDOR_LIBRARY_NAME=nvidia
+      - XDG_RUNTIME_DIR=/tmp/runtime-root # Explicitly set this
+      # Forces the EGL loader to use the NVIDIA vendor file
+      - __EGL_VENDOR_LIBRARY_FILENAMES=/usr/share/glvnd/egl_vendor.d/10_nvidia.json
+      # Ensures the loader finds the specific NVIDIA ICD
+      - VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+      # Prevents Gazebo from trying to use a software-based renderer
+      - LIBGL_ALWAYS_SOFTWARE=0
+
+    volumes:
+      # Workspace source code
+      - ${HOST_HOME_PATH}/Documents/:/home/${USER_NAME}/Documents
+      - ${HOST_HOME_PATH}/Downloads/:/home/${USER_NAME}/Downloads
+      - ${HOST_HOME_PATH}/Pictures/:/home/${USER_NAME}/Pictures
+      - ${HOST_HOME_PATH}/Videos/:/home/${USER_NAME}/Videos
+      # Optional: share your bash aliasses or custom bashrc
+      - ../common/.bash_aliases:/home/${USER_NAME}/.bash_aliases:ro
+      - ${HOST_HOME_PATH}/.ssh/:/home/${USER_NAME}/.ssh:ro
+      # ADD THIS FOR VULKAN/GZ SIM:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /usr/share/vulkan/icd.d:/usr/share/vulkan/icd.d:ro
+      - /etc/vulkan/icd.d:/etc/vulkan/icd.d:ro
+      - /usr/share/vulkan/explicit_layer.d:/usr/share/vulkan/explicit_layer.d:ro
+      - /etc/glvnd/egl_vendor.d:/etc/glvnd/egl_vendor.d:ro
+    
+    devices:
+      - /dev/dri:/dev/dri
+      - /dev/nvidia0:/dev/nvidia0
+      - /dev/nvidiactl:/dev/nvidiactl
+      - /dev/nvidia-modeset:/dev/nvidia-modeset
+
+    # Use host network for ROS2 discovery
+    network_mode: host
+
+    # Keep container running interactively
+    tty: true
+    stdin_open: true
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    
+    # Run as non-root (if your Dockerfile creates user 'dev')
+    user: ${USER_NAME}
+    hostname: ${CONTAINER_NAME}
+
+    # Working directory inside container
+    working_dir: /home/${USER_NAME}
